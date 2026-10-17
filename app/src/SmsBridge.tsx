@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { AppState, PermissionsAndroid } from 'react-native';
-import { drainSms, onSmsArrived, smsInboxAvailable } from '../modules/sms-inbox';
+import { AppState, PermissionsAndroid, Platform } from 'react-native';
+import { drainSms, onSmsArrived, setTrustedSenders, smsInboxAvailable } from '../modules/sms-inbox';
 import { useStore } from './store';
 
 /**
@@ -8,7 +8,12 @@ import { useStore } from './store';
  * ao voltar para ele e quando chega um SMS novo. Não renderiza nada.
  */
 export default function SmsBridge() {
-  const { applySms, setSmsStatus } = useStore();
+  const { applySms, setSmsStatus, smsSender } = useStore();
+
+  // O receptor nativo lê essa lista mesmo com o app fechado.
+  useEffect(() => {
+    setTrustedSenders(smsSender.trim() ? [smsSender.trim()] : []);
+  }, [smsSender]);
 
   useEffect(() => {
     if (!smsInboxAvailable) return setSmsStatus('unavailable');
@@ -20,6 +25,8 @@ export default function SmsBridge() {
 
     (async () => {
       const r = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECEIVE_SMS);
+      // Android 13+: sem essa permissão o alerta não aparece (os dados ainda entram ao abrir o app).
+      if (Number(Platform.Version) >= 33) await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
       if (!alive) return;
       if (r !== PermissionsAndroid.RESULTS.GRANTED) return setSmsStatus('denied');
       setSmsStatus('on');

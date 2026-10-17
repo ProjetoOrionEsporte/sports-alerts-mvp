@@ -21,6 +21,7 @@ export interface Game {
   venue: string;
   phase: string;
   status: 'Agendado' | 'Alterado';
+  updatedAt?: string; // ISO da última alteração; decide qual versão vence ao sincronizar
   prev?: { date: string; time: string; venue: string };
   changeNote?: string;
 }
@@ -82,6 +83,7 @@ export const coaches: Record<string, { name: string; phone: string }> = Object.f
     t.id,
     {
       name: t.id === 'chp' ? 'Rafael Souza' : `Prof. ${t.name}`,
+      // Números fictícios (o app web é público). Na prova real o admin escolhe o contato no app de mensagens.
       phone: t.id === 'ita' ? '' : `+55 49 99900-${String(1000 + i * 7)}`,
     },
   ]),

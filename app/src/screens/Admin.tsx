@@ -7,6 +7,7 @@ import { colors, font } from '../theme';
 import { Game, Priority, fmtDateLong, fmtDateShort, fmtTime, gameDate, teamName, teams, venueNames } from '../data';
 import { useStore } from '../store';
 import { GameCard, NoticeCard, NoticeDetailView, matchup } from './shared';
+import { openSmsComposer } from '../composer';
 
 const OfflineBanner = () => {
   const { online, setOnline } = useStore();
@@ -90,6 +91,8 @@ function EditGame({ route, navigation }: any) {
   const [review, setReview] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [smsText, setSmsText] = useState<string | null>(null);
+  const [smsHint, setSmsHint] = useState<string | null>(null);
 
   const errs = [!dateOk(date) && 'Data no formato AAAA-MM-DD.', !timeOk(time) && 'Horário no formato HH:mm.', !venue && 'Escolha o local.'].filter(Boolean) as string[];
   const changed = date !== g.date || time !== g.time || venue !== g.venue;
@@ -103,6 +106,7 @@ function EditGame({ route, navigation }: any) {
   const publish = () => {
     const r = publishChange(g.id, { date, time, venue, note: note.trim(), priority });
     if (!r.ok) return setError(r.error!);
+    setSmsText(r.smsText ?? null);
     setDone(true);
   };
 
@@ -114,6 +118,15 @@ function EditGame({ route, navigation }: any) {
           <Text style={[common.strong, { textAlign: 'center' }]}>Jogo {g.code} salvo e aviso gerado para {teamName(g.homeId)} e {teamName(g.awayId)}.</Text>
           {priority === 'critical' && <Text style={[common.body, { textAlign: 'center' }]}>SMS solicitado aos responsáveis. Veja o resultado no detalhe do aviso, em Avisos.</Text>}
         </Card>
+        {priority === 'critical' && smsText && (
+          <Card style={{ gap: 8 }}>
+            <Text style={common.strong}>Prova ao vivo: SMS real</Text>
+            <Text style={common.muted}>Abre o app de mensagens deste celular com o SMS pronto. Escolha o contato do professor e envie: sai pelo chip, sem internet.</Text>
+            <Text selectable style={[common.body, { fontSize: 12, backgroundColor: colors.surface, padding: 10, borderRadius: 8 }]}>{smsText}</Text>
+            <Button variant="outline" icon="smartphone" label="Enviar SMS real por este celular" onPress={async () => { const r = await openSmsComposer(smsText); if (r === 'unavailable') setSmsHint('Abra no celular para enviar pelo chip.'); }} />
+            {smsHint && <Text style={[common.muted, { color: colors.primary }]}>{smsHint}</Text>}
+          </Card>
+        )}
         <Button label="Voltar à programação" onPress={() => navigation.popToTop()} />
       </Screen>
     );

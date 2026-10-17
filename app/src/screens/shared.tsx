@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import * as SMS from 'expo-sms';
+import { openSmsComposer } from '../composer';
 import { Badge, Button, Card, Screen, SectionTitle, common } from '../ui';
 import { colors, font } from '../theme';
 import { Game, Notice, fmtDateLong, fmtDateShort, fmtStamp, fmtTime, teamName, venues } from '../data';
@@ -88,11 +88,12 @@ export function NoticeCard({ n, onPress }: { n: Notice; onPress: () => void }) {
 
 export function NoticeDetailView({ id, onBack, admin }: { id: string; onBack: () => void; admin?: boolean }) {
   const { notices, sms, retrySms, online, markSmsChip } = useStore();
-  const sendByChip = async (id: string, phone: string, text: string) => {
-    markSmsChip(id, 'Composição aberta');
+  const [hint, setHint] = React.useState<string | null>(null);
+  const sendReal = async (id: string, text: string) => {
     try {
-      const { result } = await SMS.sendSMSAsync([phone], text);
-      if (result === 'sent') markSmsChip(id, 'Enviado pelo aparelho');
+      const r = await openSmsComposer(text);
+      if (r === 'unavailable') return setHint('Abra esta tela no celular para enviar o SMS pelo chip.');
+      markSmsChip(id, r === 'sent' ? 'Enviado pelo aparelho' : 'Composição aberta');
     } catch {}
   };
   const n = notices.find((x) => x.id === id);
@@ -111,6 +112,7 @@ export function NoticeDetailView({ id, onBack, admin }: { id: string; onBack: ()
           <SectionTitle>Acompanhamento de SMS</SectionTitle>
           <Text style={common.muted}>"Aceito para envio" indica que o provedor recebeu a solicitação. Não confirma entrega nem leitura.</Text>
           {reqs.length === 0 && <Text style={common.body}>Nenhuma solicitação de SMS registrada.</Text>}
+          {hint && <Text style={[common.body, { color: colors.primary }]}>{hint}</Text>}
           {reqs.map((r) => (
             <Card key={r.id} style={{ gap: 8 }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -120,7 +122,7 @@ export function NoticeDetailView({ id, onBack, admin }: { id: string; onBack: ()
               <Text style={common.muted}>{r.phone || 'Sem telefone'}</Text>
               {r.reason && <Text style={[common.body, { color: colors.danger }]}>{r.reason}</Text>}
               {r.chip && <Text style={common.muted}>{r.chip}. Entrega e leitura não são confirmadas.</Text>}
-              {r.phone !== '' && <Button variant="outline" icon="message-square" label="Enviar pelo chip deste aparelho" onPress={() => sendByChip(r.id, r.phone, r.text)} />}
+              {r.state === 'Aceito para envio' && <Button variant="outline" icon="smartphone" label="Enviar SMS real por este celular" onPress={() => sendReal(r.id, r.text)} />}
               {r.state === 'Falhou' && <Button variant="outline" icon="refresh-cw" label="Tentar novamente" disabled={!online} onPress={() => retrySms(r.id)} />}
             </Card>
           ))}

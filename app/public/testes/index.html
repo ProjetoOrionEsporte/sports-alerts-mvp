@@ -1,0 +1,359 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Testes Arena Connect</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: planilha de testes de campo — cabeçalho com progresso, suítes empilhadas, cada caso uma linha com passos/resultado esperado e marcação. */
+:root {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --ink: #142a44;
+  --muted: #5b6b80;
+  --line: #d9e0e9;
+  --accent: #1762c4;
+  --accent-soft: #e8f0fc;
+  --pass: #127a4b; --pass-bg: #e3f5ec;
+  --fail: #b42318; --fail-bg: #fdeceb;
+  --block: #9a5b00; --block-bg: #fff3dd;
+  --code-bg: #eef2f7;
+  --f-display: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e1928; --surface: #15243a; --ink: #e6edf6; --muted: #9db0c8; --line: #263a55;
+  --accent: #6aa6f5; --accent-soft: #1b3150;
+  --pass: #5fd39b; --pass-bg: #123a2a; --fail: #ff8a80; --fail-bg: #43201e; --block: #f3c06b; --block-bg: #3d2f14;
+  --code-bg: #0f1d30; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0e1928; --surface: #15243a; --ink: #e6edf6; --muted: #9db0c8; --line: #263a55;
+  --accent: #6aa6f5; --accent-soft: #1b3150;
+  --pass: #5fd39b; --pass-bg: #123a2a; --fail: #ff8a80; --fail-bg: #43201e; --block: #f3c06b; --block-bg: #3d2f14;
+  --code-bg: #0f1d30; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px }
+.wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 28px }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0 }
+a { color: var(--accent) }
+code, .mono { font-family: var(--f-mono); font-size: 0.88em }
+
+header.top { padding-top: 32px; display: grid; gap: 14px }
+.kicker { font: 600 12px/1 var(--f-body); letter-spacing: .12em; text-transform: uppercase; color: var(--muted) }
+h1 { font-size: clamp(28px, 5vw, 40px); font-weight: 800; line-height: 1.1 }
+.lead { color: var(--muted); max-width: 68ch; margin: 0 }
+
+.progress { display: grid; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px }
+.progress-row { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: baseline; font-variant-numeric: tabular-nums }
+.progress-row strong { font: 800 24px/1 var(--f-display) }
+.bar { display: flex; height: 10px; border-radius: 6px; overflow: hidden; background: var(--code-bg) }
+.bar span { display: block; height: 100% }
+.bar .p { background: var(--pass) } .bar .f { background: var(--fail) } .bar .b { background: var(--block) }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted) }
+.dot { width: 9px; height: 9px; border-radius: 50% }
+.sync { font-size: 13px; color: var(--muted) }
+.sync.warn { color: var(--block) }
+
+.prep { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 8px; min-width: 0 }
+.box h3 { font-size: 16px }
+.box ul { margin: 0; padding-left: 18px; display: grid; gap: 4px }
+.sms { background: var(--code-bg); border-radius: 8px; padding: 10px 12px; font: 500 12.5px/1.5 var(--f-mono); word-break: break-all; margin: 0 }
+.copy { justify-self: start; font: 600 13px var(--f-body); color: var(--accent); background: var(--accent-soft); border: 0; border-radius: 6px; padding: 6px 10px; cursor: pointer }
+
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.filters button { font: 500 13px var(--f-body); color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer }
+.filters button[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: var(--accent-soft) }
+
+section.suite { display: grid; gap: 10px }
+.suite-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 14px; border-bottom: 2px solid var(--ink); padding-bottom: 8px }
+.suite-head h2 { font-size: 20px; font-weight: 800 }
+.suite-head h2 .mono { color: var(--accent); margin-right: 8px }
+.suite-meta { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums }
+.suite-why { margin: 0; color: var(--muted); font-size: 14px; max-width: 75ch }
+
+.case { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 18px }
+.case[data-s="pass"] { border-left-color: var(--pass) }
+.case[data-s="fail"] { border-left-color: var(--fail) }
+.case[data-s="blocked"] { border-left-color: var(--block) }
+.case-main { display: grid; gap: 6px; min-width: 0 }
+.case-title { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline }
+.case-title .mono { color: var(--muted) }
+.case-title h3 { font: 600 15.5px/1.35 var(--f-body) }
+.where { font-size: 12px; color: var(--accent); background: var(--accent-soft); border-radius: 4px; padding: 1px 7px }
+.case ol { margin: 0; padding-left: 20px; display: grid; gap: 2px; font-size: 14px }
+.expect { font-size: 14px; margin: 0 }
+.expect b { font-weight: 600 }
+.marks { display: flex; gap: 6px; align-items: start; flex-wrap: wrap; justify-content: flex-end }
+.marks button { font: 600 13px var(--f-body); border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 8px; padding: 7px 10px; cursor: pointer; min-width: 84px }
+.marks button[data-v="pass"][aria-pressed="true"] { background: var(--pass-bg); color: var(--pass); border-color: var(--pass) }
+.marks button[data-v="fail"][aria-pressed="true"] { background: var(--fail-bg); color: var(--fail); border-color: var(--fail) }
+.marks button[data-v="blocked"][aria-pressed="true"] { background: var(--block-bg); color: var(--block); border-color: var(--block) }
+.marks button:disabled { cursor: default; opacity: .6 }
+.note-row { grid-column: 1 / -1; display: grid; gap: 4px }
+.note-row textarea { width: 100%; min-height: 38px; resize: vertical; font: 14px/1.4 var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px }
+.who { font-size: 12px; color: var(--muted) }
+button:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+
+@media (max-width: 640px) {
+  .case { grid-template-columns: 1fr }
+  .marks { justify-content: flex-start }
+  .marks button { flex: 1; min-width: 0 }
+}
+@media (prefers-reduced-motion: no-preference) { .case { transition: border-color .2s } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <span class="kicker">OLESC 2026 · Validação do protótipo</span>
+    <h1>Roteiro de testes do Arena Connect</h1>
+    <p class="lead">Marque cada caso como Passou, Falhou ou Bloqueado e anote o que viu. As marcações ficam salvas para todo o time. Ordem sugerida: A → G no modo apresentação e nos celulares, depois H com pessoas que não conhecem o app.</p>
+    <div class="progress" aria-live="polite">
+      <div class="progress-row">
+        <strong id="pct">0%</strong>
+        <span id="summary" class="chip">0 de 0 casos marcados</span>
+        <span class="chip"><span class="dot" style="background:var(--pass)"></span><span id="n-pass">0</span> passaram</span>
+        <span class="chip"><span class="dot" style="background:var(--fail)"></span><span id="n-fail">0</span> falharam</span>
+        <span class="chip"><span class="dot" style="background:var(--block)"></span><span id="n-blocked">0</span> bloqueados</span>
+      </div>
+      <div class="bar" aria-hidden="true"><span class="p" id="bar-p"></span><span class="f" id="bar-f"></span><span class="b" id="bar-b"></span></div>
+      <span id="sync" class="sync">Conectando ao registro compartilhado…</span>
+    </div>
+  </header>
+
+  <div class="prep">
+    <div class="box">
+      <h3>Links</h3>
+      <ul>
+        <li>App no celular: <a href="https://arena-connect-prototipo.vercel.app" target="_blank" rel="noopener">arena-connect-prototipo.vercel.app</a></li>
+        <li>Modo apresentação: <a href="https://arena-connect-prototipo.vercel.app/?demo=1" target="_blank" rel="noopener">…/?demo=1</a> (notebook, largura ≥ 1180 px)</li>
+        <li>QR code do app: <code>qr-arena-connect.png</code> no repositório</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>Aparelhos</h3>
+      <ul>
+        <li><b>Celular A</b> (organização): celular que envia o SMS</li>
+        <li><b>Celular B</b> (professor): celular que recebe o SMS</li>
+        <li>Ideal: um Android e um iPhone; notebook com som para o modo apresentação</li>
+        <li>Sem internet = dados móveis e Wi-Fi desligados, <b>sem</b> modo avião (o modo avião bloqueia SMS)</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>SMS de teste (colar no app)</h3>
+      <p class="sms" id="sample-sms">Arena Connect: jogo #040 Chapeco x Itajai alterado. Agora: 18/10 14h30, Arena Multiuso. #AC1|g40|2026-10-18|14:30|1|nTESTE1|C</p>
+      <button class="copy" type="button" data-copy="sample-sms">Copiar texto</button>
+      <span class="who">Para repetir, troque <code>nTESTE1</code> por outro código: o mesmo código é ignorado de propósito.</span>
+    </div>
+  </div>
+
+  <div class="filters" role="group" aria-label="Filtrar casos">
+    <span class="who">Mostrar:</span>
+    <button type="button" data-f="all" aria-pressed="true">Todos</button>
+    <button type="button" data-f="todo" aria-pressed="false">Não marcados</button>
+    <button type="button" data-f="fail" aria-pressed="false">Falharam</button>
+    <button type="button" data-f="blocked" aria-pressed="false">Bloqueados</button>
+  </div>
+
+  <main id="suites" class="wrap" style="gap:32px"></main>
+</div>
+
+<script>
+const SUITES = [
+  { id: 'A', name: 'Acesso e perfis', why: 'Cada perfil entra na área certa e só vê o que é dele.', cases: [
+    { id: 'A1', where: 'Celular', title: 'Abrir o app pelo link e pelo QR code', steps: ['Escaneie o QR code (ou abra o link) no celular.'], expect: 'Tela "Entrar" com três perfis: Atleta, Professor e Administração. Nada para instalar.' },
+    { id: 'A2', where: 'Celular', title: 'Entrar como atleta', steps: ['Toque em Lucas Ferreira.'], expect: 'Abas Início, Agenda, Avisos e Informações. Não aparece a aba Equipe.' },
+    { id: 'A3', where: 'Celular', title: 'Entrar como professor', steps: ['Saia (ícone no topo) e entre como Rafael Souza.', 'Abra a aba Equipe.'], expect: 'Aba Equipe com o elenco de Chapecó. No detalhe de um jogo aparece a lista de presença.' },
+    { id: 'A4', where: 'Celular', title: 'Entrar como administração', steps: ['Saia e entre como Mariana Costa.'], expect: 'Abas Programação e Avisos. Programação lista os 6 jogos de 18/10 com "Alterar jogo".' },
+    { id: 'A5', where: 'Celular', title: 'Sair limpa os dados do aparelho', steps: ['Logado como atleta, toque no ícone de sair.'], expect: 'Volta para "Entrar". Ao entrar com outro perfil, nada do anterior aparece.' },
+    { id: 'A6', where: 'Celular', title: 'Atleta não vê aviso de outra equipe', steps: ['Como admin: Avisos → Novo aviso → Equipes específicas → só Florianópolis → Publicar.', 'Como atleta (Chapecó): Atualizar e abrir Avisos.'], expect: 'O aviso para Florianópolis não aparece para o atleta de Chapecó.' },
+  ]},
+  { id: 'B', name: 'Agenda e informações', why: 'O responsável encontra rápido o próximo compromisso e como chegar.', cases: [
+    { id: 'B1', where: 'Celular', title: 'Próximo jogo em destaque', steps: ['Como atleta ou professor, veja o Início e a Agenda.'], expect: '#040 Chapecó × Itajaí, 13h00, destacado como "Próximo jogo". O jogo de 19/10 aparece depois.' },
+    { id: 'B2', where: 'Celular', title: 'Detalhe do jogo', steps: ['Toque no jogo #040.'], expect: 'Data por extenso, horário de Brasília, local com endereço e orientação de acesso, fase.' },
+    { id: 'B3', where: 'Celular', title: 'Transporte e instruções', steps: ['Abra Informações.'], expect: 'Embarque, horário de saída e destino da equipe; locais dos jogos; instruções gerais.' },
+  ]},
+  { id: 'C', name: 'Sem internet e dados salvos', why: 'O que já foi baixado continua acessível quando a conexão cai.', cases: [
+    { id: 'C1', where: 'Celular B', title: 'Abrir o app sem internet', steps: ['Entre como professor com internet e navegue um pouco.', 'Desligue dados e Wi-Fi. Feche o navegador.', 'Abra o link de novo.'], expect: 'O app abre com a agenda e os avisos salvos.' },
+    { id: 'C2', where: 'Celular B', title: 'Indicação de sem internet', steps: ['Ainda sem internet, veja a barra no Início.'], expect: 'Mostra "Sem internet", a última atualização e o aviso de que os dados podem estar desatualizados.' },
+    { id: 'C3', where: 'Celular B', title: 'Atualizar sem internet não apaga nada', steps: ['Toque em Atualizar sem internet.'], expect: 'Mensagem de falha clara. A agenda continua igual.' },
+    { id: 'C4', where: 'Celular', title: 'Recarregar mantém a sessão', steps: ['Com internet, recarregue a página.'], expect: 'Continua logado e com os mesmos dados.' },
+  ]},
+  { id: 'D', name: 'Organização: alterar jogos e avisos', why: 'A organização publica mudanças com segurança e acompanha o SMS.', cases: [
+    { id: 'D1', where: 'Celular A', title: 'Validação dos campos', steps: ['Admin: Alterar jogo #041.', 'Digite 25:00 no horário → Revisar.', 'Volte ao horário original e Revisar sem mudar nada.'], expect: 'Primeiro: erro de formato do horário. Segundo: "Altere data, horário ou local para publicar".' },
+    { id: 'D2', where: 'Celular A', title: 'Revisão antes de publicar', steps: ['Altere o #041 para 15:30 → Revisar.'], expect: 'Mostra antes e depois e as duas equipes afetadas (Florianópolis e Criciúma).' },
+    { id: 'D3', where: 'Celular A', title: 'Publicar alteração normal', steps: ['Prioridade Normal → Confirmar e publicar.', 'Abra Avisos.'], expect: 'Aviso automático "Normal" explicando antes → depois. Nenhum SMS é solicitado.' },
+    { id: 'D4', where: 'Celular A', title: 'Publicar alteração crítica e acompanhar SMS', steps: ['Altere o #040 com prioridade Crítica e publique.', 'Avisos → aviso do #040.'], expect: 'Chapecó "Aceito para envio"; Itajaí "Falhou" com motivo (sem telefone). "Tentar novamente" mantém a falha com motivo. Nada diz "entregue".' },
+    { id: 'D5', where: 'Celular A', title: 'Edição exige internet', steps: ['Ative "simular perda de internet" na Programação.', 'Tente publicar uma alteração.'], expect: 'Publicação bloqueada com mensagem. Nada muda na programação.' },
+  ]},
+  { id: 'E', name: 'Modo apresentação (fluxo completo)', why: 'O fluxo inteiro da especificação em um minuto, sem depender de sinal.', cases: [
+    { id: 'E1', where: 'Notebook', title: 'Professor offline recebe a mudança por SMS', steps: ['Abra ?demo=1 e clique em Reiniciar demonstração.', 'Professor: ative "simular perda de internet".', 'Organização: #040 → 14:30, Arena Multiuso, Crítica → Revisar → Confirmar e publicar.'], expect: 'No professor aparece o alerta vermelho e a agenda passa para 14h30, Arena Multiuso, "Alterado", ainda sem internet.' },
+    { id: 'E2', where: 'Notebook', title: 'Som e destaque do alerta', steps: ['Repita E1 com o som do notebook ligado.'], expect: 'Três bipes e alerta legível de longe ("ALERTA · OLESC 2026").' },
+    { id: 'E3', where: 'Notebook', title: 'Reconectar não duplica', steps: ['Professor: desligue a simulação e toque em Atualizar.', 'Abra Avisos.'], expect: 'Só um aviso do #040. Agenda com os dados oficiais.' },
+    { id: 'E4', where: 'Notebook', title: 'Falha de SMS não desfaz a mudança', steps: ['Organização: Avisos → aviso do #040.'], expect: 'Itajaí "Falhou" e mesmo assim o jogo continua alterado para todos.' },
+  ]},
+  { id: 'F', name: 'Prova real com SMS', why: 'O dado chega pela rede celular e atualiza o celular sem internet.', cases: [
+    { id: 'F1', where: 'Celular B', title: 'Preparar o celular do professor', steps: ['Com internet, abra o link e entre como Rafael Souza.', 'Desligue dados e Wi-Fi (sem modo avião).'], expect: 'App mostra "Sem internet" e a agenda com #040 às 13h00.' },
+    { id: 'F2', where: 'Celular A', title: 'Organização envia o SMS real', steps: ['Admin: altere o #040 com prioridade Crítica e publique.', 'Toque em "Enviar SMS real por este celular", escolha o contato de B e envie.'], expect: 'O app de mensagens abre com o texto e o link prontos. O SMS sai pelo chip.' },
+    { id: 'F3', where: 'Celular B', title: 'SMS chega sem internet', steps: ['Aguarde o SMS em B.'], expect: 'SMS do celular A, legível, com o link "Atualize no app".' },
+    { id: 'F4', where: 'Celular B', title: 'Tocar no link atualiza offline', steps: ['Toque no link do SMS.'], expect: 'O app abre sem internet, mostra o alerta ("Aberto pelo link do SMS") e a agenda com 14h30, Arena Multiuso.' },
+    { id: 'F5', where: 'Celular B', title: 'Tocar de novo não duplica', steps: ['Toque no mesmo link outra vez.'], expect: 'Mensagem "Esse SMS já estava aplicado". Continua um aviso só.' },
+    { id: 'F6', where: 'Android', title: 'Repetir F4 no Android (Chrome)', steps: ['Faça F1–F4 com um Android como celular B.'], expect: 'Mesmo resultado de F4.' },
+    { id: 'F7', where: 'iPhone', title: 'Repetir F4 no iPhone (Safari)', steps: ['Faça F1–F4 com um iPhone como celular B.'], expect: 'Mesmo resultado de F4.' },
+  ]},
+  { id: 'G', name: 'Acessibilidade e uso no celular', why: 'Ninguém fica de fora por cor, tamanho de letra ou tipo de aparelho.', cases: [
+    { id: 'G1', where: 'Celular', title: 'Prioridade em texto, não só em cor', steps: ['Veja um aviso crítico e um normal.'], expect: 'Os selos dizem "Crítico" e "Normal" por escrito.' },
+    { id: 'G2', where: 'Celular', title: 'Letra grande do sistema', steps: ['Aumente o tamanho da fonte do celular e abra o app.'], expect: 'Textos legíveis, sem cortes nem sobreposição.' },
+    { id: 'G3', where: 'Notebook/tablet', title: 'Tela grande', steps: ['Abra o app (sem ?demo=1) no notebook.'], expect: 'App em coluna central, como um celular, sem rolagem lateral.' },
+    { id: 'G4', where: 'Celular', title: 'Leitor de tela', steps: ['Ative TalkBack (Android) ou VoiceOver (iPhone) e percorra o Início.'], expect: 'Botões e campos são anunciados com nome (Atualizar, Sair, Texto do SMS…).' },
+  ]},
+  { id: 'H', name: 'Validação com pessoas reais', why: 'Teste com 3–5 professores ou atletas que nunca viram o app. Não explique nada antes; anote frases ditas.', cases: [
+    { id: 'H1', where: 'Pessoa real', title: 'Achar o próximo jogo', steps: ['Peça: "Quando e onde é o seu próximo jogo?"'], expect: 'Responde em até 10 segundos, sem ajuda.' },
+    { id: 'H2', where: 'Pessoa real', title: 'Entender o alerta', steps: ['Dispare o alerta (E1 ou F4) e pergunte: "O que aconteceu?"'], expect: 'Explica que o jogo mudou e para quando/onde.' },
+    { id: 'H3', where: 'Pessoa real', title: 'Confiar sem internet', steps: ['Pergunte: "Se você estivesse sem internet, confiaria nessa informação?"'], expect: 'Confia, ou indica o que faltou para confiar (anote).' },
+    { id: 'H4', where: 'Pessoa real', title: 'Achar o transporte', steps: ['Peça: "Onde e a que horas sua equipe embarca?"'], expect: 'Encontra em Informações sem ajuda.' },
+    { id: 'H5', where: 'Organização', title: 'Valor para a organização', steps: ['Pergunte a quem organiza eventos: "Isso substituiria o grupo de WhatsApp para mudanças de jogo?"'], expect: 'Resposta e motivo anotados (o que faltaria para adotar).' },
+  ]},
+];
+
+const ALL = SUITES.flatMap(s => s.cases);
+const LABEL = { pass: 'Passou', fail: 'Falhou', blocked: 'Bloqueado' };
+let results = {};          // id -> {status, note, by, at}
+let filter = 'all';
+let db = null, user = null, myId = null, canWrite = true, shared = false;
+const names = {};
+
+// Sem registro compartilhado (fora do claude.ai ou sem login), marca só neste navegador.
+const LOCAL_KEY = 'arena-connect-testes';
+try { results = JSON.parse(localStorage.getItem(LOCAL_KEY) || '{}') } catch { results = {} }
+const saveLocal = () => { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(results)) } catch {} };
+
+const el = (tag, attrs = {}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') n.className = v; else if (k === 'text') n.textContent = v; else n.setAttribute(k, v);
+  }
+  kids.flat().forEach(k => k != null && n.append(k));
+  return n;
+};
+const fmtWhen = iso => { try { return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) } catch { return '' } };
+
+function render() {
+  const root = document.getElementById('suites');
+  root.textContent = '';
+  for (const s of SUITES) {
+    const visible = s.cases.filter(c => {
+      const st = results[c.id]?.status;
+      return filter === 'all' || (filter === 'todo' ? !st : st === filter);
+    });
+    if (!visible.length) continue;
+    const done = s.cases.filter(c => results[c.id]?.status).length;
+    const sec = el('section', { class: 'suite', 'aria-labelledby': 'h-' + s.id },
+      el('div', { class: 'suite-head' },
+        el('h2', { id: 'h-' + s.id }, el('span', { class: 'mono', text: s.id }), s.name),
+        el('span', { class: 'suite-meta', text: `${done}/${s.cases.length} marcados` })),
+      el('p', { class: 'suite-why', text: s.why }));
+    for (const c of visible) sec.append(caseCard(c));
+    root.append(sec);
+  }
+  updateProgress();
+}
+
+function caseCard(c) {
+  const r = results[c.id] || {};
+  const marks = el('div', { class: 'marks', role: 'group', 'aria-label': `Resultado de ${c.id}` },
+    ...['pass', 'fail', 'blocked'].map(v => {
+      const b = el('button', { type: 'button', 'data-v': v, 'aria-pressed': String(r.status === v), text: LABEL[v] });
+      if (!canWrite) b.disabled = true;
+      b.addEventListener('click', () => mark(c.id, r.status === v ? null : v));
+      return b;
+    }));
+  const ta = el('textarea', { id: 'note-' + c.id, 'aria-label': `Observações de ${c.id}`, placeholder: 'Observações: o que aconteceu, aparelho, print…' });
+  ta.value = r.note || '';
+  if (!canWrite) ta.readOnly = true;
+  let t;
+  ta.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => saveNote(c.id, ta.value), 900) });
+  ta.addEventListener('blur', () => { clearTimeout(t); saveNote(c.id, ta.value) });
+  const whoTxt = r.at ? `${r.status ? LABEL[r.status] : 'Anotado'} por ${r.by ? (names[r.by] || 'alguém do time') : 'você'} em ${fmtWhen(r.at)}` : '';
+  return el('article', { class: 'case', 'data-s': r.status || '' },
+    el('div', { class: 'case-main' },
+      el('div', { class: 'case-title' }, el('span', { class: 'mono', text: c.id }), el('h3', { text: c.title }), el('span', { class: 'where', text: c.where })),
+      el('ol', {}, ...c.steps.map(s => el('li', { text: s }))),
+      el('p', { class: 'expect' }, el('b', { text: 'Esperado: ' }), c.expect)),
+    marks,
+    el('div', { class: 'note-row' }, ta, whoTxt ? el('span', { class: 'who', text: whoTxt }) : null));
+}
+
+function updateProgress() {
+  const n = { pass: 0, fail: 0, blocked: 0 };
+  ALL.forEach(c => { const s = results[c.id]?.status; if (s) n[s]++ });
+  const marked = n.pass + n.fail + n.blocked, total = ALL.length;
+  document.getElementById('pct').textContent = Math.round(marked / total * 100) + '%';
+  document.getElementById('summary').textContent = `${marked} de ${total} casos marcados`;
+  for (const k of Object.keys(n)) document.getElementById('n-' + k).textContent = n[k];
+  document.getElementById('bar-p').style.width = (n.pass / total * 100) + '%';
+  document.getElementById('bar-f').style.width = (n.fail / total * 100) + '%';
+  document.getElementById('bar-b').style.width = (n.blocked / total * 100) + '%';
+}
+
+async function write(id, patch) {
+  const next = { ...(results[id] || {}), ...patch, at: new Date().toISOString() };
+  if (myId) next.by = myId;
+  results = { ...results, [id]: next };
+  render();
+  if (!shared) return saveLocal();
+  try {
+    await db.collection('results').doc(id).set(next);
+  } catch (e) {
+    if (e?.code === 'invalid_argument') { canWrite = false; setSync('Você pode ver o progresso, mas não marcar. Peça acesso de Contributor ou Editor ao dono.', true); render() }
+    else setSync('Não foi possível salvar agora. Tente de novo em instantes.', true);
+  }
+}
+const mark = (id, status) => write(id, { status });
+function saveNote(id, note) { if ((results[id]?.note || '') !== note) write(id, { note }) }
+
+function setSync(text, warn) { const s = document.getElementById('sync'); s.textContent = text; s.classList.toggle('warn', !!warn) }
+
+document.querySelectorAll('.filters button').forEach(b => b.addEventListener('click', () => {
+  filter = b.dataset.f;
+  document.querySelectorAll('.filters button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  render();
+}));
+document.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', async () => {
+  const src = document.getElementById(b.dataset.copy);
+  try { await navigator.clipboard.writeText(src.textContent); b.textContent = 'Copiado' }
+  catch { const r = document.createRange(); r.selectNodeContents(src); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = 'Selecionado: copie' }
+  setTimeout(() => b.textContent = 'Copiar texto', 2000);
+}));
+
+render();
+
+(async () => {
+  if (!window.claude?.use) { setSync('Marcações salvas só neste navegador: cada pessoa registra os próprios resultados.', true); return }
+  [db, user] = await Promise.all([claude.use('db'), claude.use('user')]);
+  if (!db) { setSync('Marcações salvas só neste navegador (entre no claude.ai para compartilhar com o time).', true); return }
+  myId = user ? await user.id() : null;
+  const cw = user ? await user.can('data.write') : null;
+  if (cw === false) canWrite = false;
+  shared = true;
+  setSync(canWrite ? 'Registro compartilhado: o time vê as marcações ao vivo.' : 'Você pode ver o progresso, mas não marcar. Peça acesso de Contributor ou Editor ao dono.', !canWrite);
+  db.collection('results').onSnapshot(async snap => {
+    const next = {};
+    snap.docs.forEach(d => { if (d.exists) next[d.id] = d.data() });
+    results = next;
+    const ids = [...new Set(Object.values(next).map(r => r.by).filter(Boolean))];
+    if (user && ids.length) {
+      try { const ps = await user.profiles(ids); ids.forEach(id => { names[id] = ps[id]?.name || '' }) } catch {}
+    }
+    // Não atropela quem está digitando uma observação ainda não salva.
+    const a = document.activeElement;
+    const focused = a?.id, typing = a?.tagName === 'TEXTAREA' ? a.value : null;
+    render();
+    const back = focused && document.getElementById(focused);
+    if (back) { if (typing !== null) back.value = typing; back.focus() }
+  }, () => setSync('Conexão com o registro caiu. Recarregue a página.', true));
+})();
+</script>
+</body></html>

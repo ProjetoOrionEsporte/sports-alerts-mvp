@@ -15,3 +15,6 @@ export const onSmsArrived = (cb: () => void): (() => void) => {
   const sub = native.addListener('onSms', cb);
   return () => sub.remove();
 };
+
+/** Define os números oficiais aceitos pelo receptor (vale também com o app fechado). */
+export const setTrustedSenders = (senders: string[]) => native?.setTrustedSenders(senders);
