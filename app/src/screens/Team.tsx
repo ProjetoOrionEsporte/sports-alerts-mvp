@@ -2,7 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Badge, Button, Card, Empty, Screen, SectionTitle, SyncBar, common } from '../ui';
+import { Badge, Button, Card, Empty, Field, Screen, SectionTitle, SyncBar, common } from '../ui';
+import { smsInboxAvailable } from '../../modules/sms-inbox';
 import { colors, font } from '../theme';
 import { Game, NOW, fmtDateLong, gameDate, instructions, roster, teamName, transport, venueNames, venues } from '../data';
 import { useStore } from '../store';
@@ -157,6 +158,7 @@ export function InfoScreen() {
       {(used.length ? used : venueNames).map((v) => (
         <Card key={v}><Text style={common.strong}>{v}</Text><Text style={[common.body, { marginTop: 4 }]}>{venues[v]}</Text></Card>
       ))}
+      <SmsSenderCard />
       <SectionTitle>Instruções gerais</SectionTitle>
       {instructions.map((i) => (
         <Card key={i.title}><Text style={common.strong}>{i.title}</Text><Text style={[common.body, { marginTop: 4 }]}>{i.text}</Text></Card>
@@ -164,6 +166,41 @@ export function InfoScreen() {
     </Screen>
   );
 }
+/** Configuração de teste: número oficial cujos SMS atualizam o app e disparam o alerta. */
+function SmsSenderCard() {
+  const { smsSender, setSmsSender, smsStatus } = useStore();
+  const [value, setValue] = useState(smsSender);
+  const [saved, setSaved] = useState(false);
+  const digits = value.replace(/D/g, '');
+  const valid = digits.length === 0 || digits.length === 5 || digits.length >= 10;
+  return (
+    <>
+      <SectionTitle>Alertas por SMS</SectionTitle>
+      <Card style={{ gap: 10 }}>
+        <Text style={common.body}>
+          Mudanças de jogo enviadas por SMS a partir deste número atualizam o app e mostram um alerta, mesmo sem internet.
+        </Text>
+        <Field
+          label="Número oficial (teste)"
+          value={value}
+          onChangeText={(v) => { setValue(v); setSaved(false); }}
+          placeholder="Ex.: +55 49 99999-0000"
+          keyboardType="phone-pad"
+        />
+        {!valid && <Text style={{ fontFamily: font.semi, color: colors.danger }}>Informe DDD + número, ou um número curto de 5 dígitos.</Text>}
+        <Button label={saved ? 'Número salvo' : 'Salvar número'} icon="check" disabled={!valid || saved} onPress={() => { setSmsSender(value.trim()); setSaved(true); }} />
+        <Text style={common.muted}>
+          {!smsInboxAvailable
+            ? 'O recebimento automático funciona só no APK Android. Aqui o número fica salvo, mas o SMS não é lido.'
+            : smsStatus === 'denied'
+              ? 'Permissão de SMS negada. Autorize SMS e notificações nas configurações do app.'
+              : 'SMS de outros números são ignorados pelo app.'}
+        </Text>
+      </Card>
+    </>
+  );
+}
+
 function Row({ icon, label, value }: { icon: keyof typeof Feather.glyphMap; label: string; value: string }) {
   return (
     <View style={{ flexDirection: 'row', gap: 12 }}>

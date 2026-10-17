@@ -120,7 +120,7 @@ export function Empty({ icon, text }: { icon: keyof typeof Feather.glyphMap; tex
 
 /** Barra de conexão/sincronização para atleta e professor. */
 export function SyncBar() {
-  const { online, setOnline, lastSync, sync, syncing, syncError, hasPending, smsUpdate, dismissSmsUpdate, smsStatus, applySms } = useStore();
+  const { online, setOnline, lastSync, sync, syncing, syncError, hasPending, smsUpdate, dismissSmsUpdate, smsStatus, applySms, smsSender } = useStore();
   const [paste, setPaste] = React.useState('');
   const [pasteMsg, setPasteMsg] = React.useState<string | null>(null);
   return (
@@ -155,7 +155,7 @@ export function SyncBar() {
       )}
       {smsStatus !== 'unavailable' && (
         <Text style={s.demoText}>
-          {smsStatus === 'on' ? 'Recebimento de SMS do evento: ativo.' : 'Recebimento de SMS bloqueado. Autorize "SMS" nas permissões do app para atualizar sem internet.'}
+          {smsStatus === 'on' ? (smsSender ? `Alertas por SMS ativos (número oficial ${smsSender}).` : 'Alertas por SMS: defina o número oficial em Informações.') : 'Recebimento de SMS bloqueado. Autorize "SMS" nas permissões do app para atualizar sem internet.'}
         </Text>
       )}
       <View style={{ gap: 6 }}>

@@ -10,6 +10,9 @@ import { StoreProvider, useStore } from './src/store';
 import { colors, font } from './src/theme';
 import Login from './src/screens/Login';
 import SmsBridge from './src/SmsBridge';
+import SmsAlertOverlay from './src/SmsAlert';
+import DemoStage from './src/DemoStage';
+import { param } from './src/env';
 import { Agenda, Home, InfoScreen, Notices, Squad } from './src/screens/Team';
 import { AdminGames, AdminNotices } from './src/screens/Admin';
 
@@ -67,6 +70,8 @@ export default function App() {
   const [loaded, fontError] = useFonts({ Inter_400Regular, Inter_600SemiBold, Inter_700Bold });
   // Se a fonte falhar, segue com a fonte do sistema em vez de ficar no spinner.
   if (!loaded && !fontError) return <View style={{ flex: 1, justifyContent: 'center' }}><ActivityIndicator color={colors.primary} /></View>;
+  // Modo apresentação: dois aparelhos lado a lado (só web).
+  if (param('demo')) return <DemoStage />;
   return (
     <SafeAreaProvider>
       <StoreProvider>
@@ -75,6 +80,7 @@ export default function App() {
         <View style={{ flex: 1, backgroundColor: '#e9edf3' }}>
           <View style={{ flex: 1, width: '100%', maxWidth: 520, alignSelf: 'center', backgroundColor: colors.surface, overflow: 'hidden' }}>
             <Root />
+            <SmsAlertOverlay />
           </View>
         </View>
       </StoreProvider>
